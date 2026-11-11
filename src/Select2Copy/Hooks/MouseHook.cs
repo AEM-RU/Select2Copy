@@ -1,20 +1,31 @@
+using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
-using System.Threading.Channels;
 using Select2Copy.Interop;
 using Select2Copy.Services;
 
 namespace Select2Copy.Hooks;
 
-internal sealed record CopyResult(string Text, uint Sequence);
+internal sealed class CopyResult
+{
+    public string Text { get; }
+    public uint Sequence { get; }
+
+    public CopyResult(string text, uint sequence)
+    {
+        Text = text;
+        Sequence = sequence;
+    }
+}
 
 internal sealed class MouseHook : IDisposable
 {
     private readonly SettingsStore _store;
-    private readonly Channel<CopyRequest> _queue;
+    private readonly BlockingCollection<CopyRequest> _queue;
     private readonly CancellationTokenSource _cts = new();
     private readonly NativeMethods.HookProc _proc;
     private readonly ManualResetEventSlim _ready = new(false);
-    private readonly uint _selfPid = (uint)Environment.ProcessId;
+    private readonly uint _selfPid = (uint)Process.GetCurrentProcess().Id;
 
     private Thread? _thread;
     private uint _threadId;
@@ -34,14 +45,9 @@ internal sealed class MouseHook : IDisposable
     {
         _store = store;
         _proc = Callback;
-        _queue = Channel.CreateBounded<CopyRequest>(new BoundedChannelOptions(4)
-        {
-            FullMode = BoundedChannelFullMode.DropOldest,
-            SingleReader = true,
-            SingleWriter = false
-        });
+        _queue = new BlockingCollection<CopyRequest>(new ConcurrentQueue<CopyRequest>(), 4);
 
-        _ = Task.Run(WorkerLoopAsync);
+        _ = Task.Run(WorkerLoop);
     }
 
     public void Start()
@@ -194,18 +200,23 @@ internal sealed class MouseHook : IDisposable
             return;
         }
 
-        _queue.Writer.TryWrite(new CopyRequest(data.pt));
+        var request = new CopyRequest(data.pt);
+        if (!_queue.TryAdd(request))
+        {
+            _queue.TryTake(out _);
+            _queue.TryAdd(request);
+        }
     }
 
-    private async Task WorkerLoopAsync()
+    private void WorkerLoop()
     {
         try
         {
-            await foreach (CopyRequest request in _queue.Reader.ReadAllAsync(_cts.Token))
+            foreach (CopyRequest request in _queue.GetConsumingEnumerable(_cts.Token))
             {
                 try
                 {
-                    await ProcessAsync(request, _cts.Token);
+                    ProcessRequest(request);
                 }
                 catch (OperationCanceledException)
                 {
@@ -221,7 +232,7 @@ internal sealed class MouseHook : IDisposable
         }
     }
 
-    private async Task ProcessAsync(CopyRequest request, CancellationToken token)
+    private void ProcessRequest(CopyRequest request)
     {
         var settings = _store.Current;
         if (!settings.Enabled)
@@ -258,7 +269,11 @@ internal sealed class MouseHook : IDisposable
             }
         }
 
-        await Task.Delay(60, token);
+        Thread.Sleep(60);
+        if (_cts.IsCancellationRequested)
+        {
+            return;
+        }
 
         settings = _store.Current;
         if (!settings.Enabled || _down || ProcessService.IsExcluded(pid, settings.ExcludedApps))
@@ -272,7 +287,12 @@ internal sealed class MouseHook : IDisposable
         bool changed = false;
         for (int attempt = 0; attempt < 25; attempt++)
         {
-            await Task.Delay(10, token);
+            Thread.Sleep(10);
+            if (_cts.IsCancellationRequested)
+            {
+                return;
+            }
+
             if (NativeMethods.GetClipboardSequenceNumber() != sequence)
             {
                 changed = true;
@@ -291,7 +311,7 @@ internal sealed class MouseHook : IDisposable
             return;
         }
 
-        TextCopied?.Invoke(new CopyResult(text, NativeMethods.GetClipboardSequenceNumber()));
+        TextCopied?.Invoke(new CopyResult(text!, NativeMethods.GetClipboardSequenceNumber()));
     }
 
     private void Reset()
@@ -310,7 +330,7 @@ internal sealed class MouseHook : IDisposable
 
         _disposed = true;
         _stop = true;
-        _queue.Writer.TryComplete();
+        _queue.CompleteAdding();
         _cts.Cancel();
 
         if (_threadId != 0)
@@ -333,5 +353,13 @@ internal sealed class MouseHook : IDisposable
         _cts.Dispose();
     }
 
-    private readonly record struct CopyRequest(NativeMethods.POINT Point);
+    private readonly struct CopyRequest
+    {
+        public NativeMethods.POINT Point { get; }
+
+        public CopyRequest(NativeMethods.POINT point)
+        {
+            Point = point;
+        }
+    }
 }

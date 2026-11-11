@@ -1,7 +1,7 @@
 using System.IO;
 using System.Runtime.InteropServices;
+using System.Runtime.Serialization;
 using System.Text;
-using System.Text.Json;
 using Select2Copy.Interop;
 
 namespace Select2Copy.Services;
@@ -12,12 +12,6 @@ internal sealed class HistoryStore : IDisposable
     private const int MaxChars = 100_000;
 
     private static readonly byte[] Entropy = Encoding.UTF8.GetBytes("Select2Copy.History.v1");
-    private static readonly JsonSerializerOptions JsonOptions = new()
-    {
-        WriteIndented = true,
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-        PropertyNameCaseInsensitive = true
-    };
 
     private readonly object _gate = new();
     private readonly object _saveLock = new();
@@ -96,7 +90,7 @@ internal sealed class HistoryStore : IDisposable
         try
         {
             string json = File.ReadAllText(AppPaths.HistoryFile, Encoding.UTF8);
-            HistoryFile? file = JsonSerializer.Deserialize<HistoryFile>(json, JsonOptions);
+            HistoryFile? file = JsonFile.Deserialize<HistoryFile>(json);
             if (file?.Items == null)
             {
                 return;
@@ -106,9 +100,9 @@ internal sealed class HistoryStore : IDisposable
             foreach (string encoded in file.Items)
             {
                 string? text = Unprotect(encoded);
-                if (!string.IsNullOrEmpty(text) && !loaded.Contains(text))
+                if (!string.IsNullOrEmpty(text) && !loaded.Contains(text!))
                 {
-                    loaded.Add(text);
+                    loaded.Add(text!);
                     if (loaded.Count >= MaxItems)
                     {
                         break;
@@ -164,7 +158,7 @@ internal sealed class HistoryStore : IDisposable
                     }
                 }
 
-                string json = JsonSerializer.Serialize(file, JsonOptions);
+                string json = JsonFile.Serialize(file);
                 string path = AppPaths.HistoryFile;
                 string temp = path + ".tmp";
                 File.WriteAllText(temp, json, new UTF8Encoding(false));
@@ -341,10 +335,14 @@ internal sealed class HistoryStore : IDisposable
         _disposed = true;
         _saveTimer.Dispose();
     }
+}
 
-    private sealed class HistoryFile
-    {
-        public int Version { get; set; } = 1;
-        public List<string> Items { get; set; } = new();
-    }
+[DataContract]
+internal sealed class HistoryFile
+{
+    [DataMember(Name = "version", Order = 0)]
+    public int Version { get; set; } = 1;
+
+    [DataMember(Name = "items", Order = 1)]
+    public List<string> Items { get; set; } = new();
 }

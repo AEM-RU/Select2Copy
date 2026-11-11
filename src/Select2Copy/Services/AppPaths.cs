@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.IO;
 
 namespace Select2Copy.Services;
@@ -12,7 +13,13 @@ internal static class AppPaths
 
     static AppPaths()
     {
-        ExecutablePath = Environment.ProcessPath ?? Path.Combine(AppContext.BaseDirectory, "Select2Copy.exe");
+#if NET48
+        ExecutablePath = Process.GetCurrentProcess().MainModule?.FileName
+            ?? Path.Combine(AppContext.BaseDirectory, "Select2Copy.exe");
+#else
+        ExecutablePath = Environment.ProcessPath
+            ?? Path.Combine(AppContext.BaseDirectory, "Select2Copy.exe");
+#endif
         string? exeDir = Path.GetDirectoryName(ExecutablePath);
         if (string.IsNullOrWhiteSpace(exeDir))
         {

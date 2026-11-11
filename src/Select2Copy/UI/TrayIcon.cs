@@ -51,7 +51,7 @@ internal sealed class TrayIcon : IDisposable
     public TrayIcon(SettingsStore store)
     {
         _store = store;
-        _doubleClickTime = Math.Clamp(SystemInformation.DoubleClickTime, 120, 800);
+        _doubleClickTime = Math.Max(120, Math.Min(800, SystemInformation.DoubleClickTime));
         _iconOn = CreateIcon(true);
         _iconOff = CreateIcon(false);
 
@@ -175,7 +175,7 @@ internal sealed class TrayIcon : IDisposable
         bool excluded = _store.Current.ExcludedApps
             .Any(item => string.Equals(item, name, StringComparison.OrdinalIgnoreCase));
 
-        string display = name.Length > 28 ? name[..27] + "..." : name;
+        string display = name.Length > 28 ? name.Substring(0, 27) + "..." : name;
         _excludeItem.Text = (excluded ? "Включить: " : "Исключить: ") + display;
         _excludeItem.Checked = excluded;
         _excludeItem.Visible = true;

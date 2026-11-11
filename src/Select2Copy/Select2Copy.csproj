@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net10.0-windows</TargetFramework>
+    <TargetFrameworks>net10.0-windows;net48</TargetFrameworks>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
@@ -20,6 +20,13 @@
     <AssemblyTitle>Select2Copy</AssemblyTitle>
     <Description>Select text and copy it automatically</Description>
     <NoWarn>$(NoWarn);WFO0003</NoWarn>
+    <LangVersion>latest</LangVersion>
+    <GenerateSupportedRuntime>false</GenerateSupportedRuntime>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+    <DebugType>None</DebugType>
+    <DebugSymbols>false</DebugSymbols>
   </PropertyGroup>
 
   <ItemGroup>
@@ -29,6 +36,11 @@
 
   <ItemGroup>
     <EmbeddedResource Include="Assets\copied.wav" LogicalName="Select2Copy.Assets.copied.wav" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'net48'">
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="All" />
+    <Reference Include="System.Runtime.Serialization" />
   </ItemGroup>
 
 </Project>

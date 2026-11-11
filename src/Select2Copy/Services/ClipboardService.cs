@@ -44,7 +44,7 @@ internal static class ClipboardService
                                 : Marshal.PtrToStringAnsi(pointer, size);
 
                             int zero = text.IndexOf('\0');
-                            return zero >= 0 ? text[..zero] : text;
+                            return zero >= 0 ? text.Substring(0, zero) : text;
                         }
                         finally
                         {

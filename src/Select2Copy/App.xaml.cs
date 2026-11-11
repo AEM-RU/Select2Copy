@@ -220,7 +220,7 @@ public partial class App : Application
         }
         else
         {
-            _sequential.OnExternal(text, _history.Snapshot);
+            _sequential.OnExternal(text!, _history.Snapshot);
         }
     }
 

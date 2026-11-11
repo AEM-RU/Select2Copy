@@ -1,21 +1,30 @@
+using System.Runtime.Serialization;
 using System.Text;
-using System.Text.Json.Serialization;
 using System.Windows.Input;
 using Select2Copy.Interop;
 
 namespace Select2Copy.Models;
 
+[DataContract]
 public sealed class HotkeyConfig
 {
+    [DataMember(Name = "ctrl", Order = 0)]
     public bool Ctrl { get; set; }
+
+    [DataMember(Name = "shift", Order = 1)]
     public bool Shift { get; set; }
+
+    [DataMember(Name = "alt", Order = 2)]
     public bool Alt { get; set; }
+
+    [DataMember(Name = "win", Order = 3)]
     public bool Win { get; set; }
+
+    [DataMember(Name = "keyName", Order = 4)]
     public string KeyName { get; set; } = nameof(Key.F2);
 
     public static HotkeyConfig Default => new() { Ctrl = true, KeyName = nameof(Key.F2) };
 
-    [JsonIgnore]
     public bool IsValid
     {
         get
@@ -34,7 +43,6 @@ public sealed class HotkeyConfig
         }
     }
 
-    [JsonIgnore]
     public uint Modifiers
     {
         get
@@ -48,10 +56,8 @@ public sealed class HotkeyConfig
         }
     }
 
-    [JsonIgnore]
     public uint VirtualKey => TryGetKey(out Key key) ? (uint)KeyInterop.VirtualKeyFromKey(key) : 0;
 
-    [JsonIgnore]
     public string Display
     {
         get
@@ -67,7 +73,7 @@ public sealed class HotkeyConfig
                 string text = key.ToString();
                 if (key >= Key.D0 && key <= Key.D9)
                 {
-                    text = text[1..];
+                    text = text.Substring(1);
                 }
 
                 builder.Append(text);
@@ -87,7 +93,7 @@ public sealed class HotkeyConfig
 
         var config = new HotkeyConfig();
         bool hasKey = false;
-        string[] parts = text.Split(new[] { '+', ' ' }, StringSplitOptions.RemoveEmptyEntries);
+        string[] parts = text!.Split(new[] { '+', ' ' }, StringSplitOptions.RemoveEmptyEntries);
         foreach (string part in parts)
         {
             string token = part.Trim();

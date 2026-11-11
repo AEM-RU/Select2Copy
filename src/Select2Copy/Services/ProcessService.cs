@@ -24,7 +24,17 @@ internal static class ProcessService
 
     private static readonly ConcurrentDictionary<uint, CacheEntry> Cache = new();
 
-    private readonly record struct CacheEntry(string Name, int Tick);
+    private readonly struct CacheEntry
+    {
+        public string Name { get; }
+        public int Tick { get; }
+
+        public CacheEntry(string name, int tick)
+        {
+            Name = name;
+            Tick = tick;
+        }
+    }
 
     public static string Normalize(string? name)
     {
@@ -33,15 +43,15 @@ internal static class ProcessService
             return "";
         }
 
-        name = name.Trim();
-        if (name.Length >= 2 && name[0] == '"' && name[^1] == '"')
+        name = name!.Trim();
+        if (name.Length >= 2 && name[0] == '"' && name[name.Length - 1] == '"')
         {
-            name = name[1..^1].Trim();
+            name = name.Substring(1, name.Length - 2).Trim();
         }
 
         if (name.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))
         {
-            name = name[..^4];
+            name = name.Substring(0, name.Length - 4);
         }
 
         return name.Trim();

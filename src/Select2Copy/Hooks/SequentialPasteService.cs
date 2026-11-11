@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 using Select2Copy.Interop;
 using Select2Copy.Services;
@@ -10,7 +11,7 @@ internal sealed class SequentialPasteService : IDisposable
 
     private readonly Func<string, bool> _write;
     private readonly NativeMethods.HookProc _proc;
-    private readonly uint _selfPid = (uint)Environment.ProcessId;
+    private readonly uint _selfPid = (uint)Process.GetCurrentProcess().Id;
     private readonly object _gate = new();
     private readonly System.Threading.Timer _timer;
     private readonly ManualResetEventSlim _ready = new(false);

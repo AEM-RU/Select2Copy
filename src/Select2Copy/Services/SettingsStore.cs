@@ -1,21 +1,11 @@
 using System.IO;
 using System.Text;
-using System.Text.Json;
 using Select2Copy.Models;
 
 namespace Select2Copy.Services;
 
 internal sealed class SettingsStore
 {
-    private static readonly JsonSerializerOptions JsonOptions = new()
-    {
-        WriteIndented = true,
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-        PropertyNameCaseInsensitive = true,
-        AllowTrailingCommas = true,
-        ReadCommentHandling = JsonCommentHandling.Skip
-    };
-
     private readonly object _gate = new();
     private Settings _current;
 
@@ -74,7 +64,7 @@ internal sealed class SettingsStore
             try
             {
                 string json = File.ReadAllText(AppPaths.SettingsFile, Encoding.UTF8);
-                Settings? settings = JsonSerializer.Deserialize<Settings>(json, JsonOptions);
+                Settings? settings = JsonFile.Deserialize<Settings>(json);
                 if (settings != null)
                 {
                     Normalize(settings);
@@ -97,7 +87,7 @@ internal sealed class SettingsStore
         try
         {
             bool autoStartChanged = _current == null || _current.StartWithWindows != settings.StartWithWindows;
-            string json = JsonSerializer.Serialize(settings, JsonOptions);
+            string json = JsonFile.Serialize(settings);
             string path = AppPaths.SettingsFile;
             string temp = path + ".tmp";
             File.WriteAllText(temp, json, new UTF8Encoding(false));

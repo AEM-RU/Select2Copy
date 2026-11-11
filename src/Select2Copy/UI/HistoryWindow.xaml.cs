@@ -67,7 +67,7 @@ public partial class HistoryWindow : Window
 
             if (preview.Length > 170)
             {
-                preview = preview[..167] + "...";
+                preview = preview.Substring(0, 167) + "...";
             }
 
             var border = new Border();
