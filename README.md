@@ -6,11 +6,14 @@
 
 ## Скачать
 
-Готовый файл — в [последнем релизе](https://github.com/AEM-RU/Select2Copy/releases/latest).
+Готовые файлы — в [последнем релизе](https://github.com/AEM-RU/Select2Copy/releases/latest).
 
-- `Select2Copy.exe` — self-contained сборка для Windows 10/11 x64. .NET устанавливать не нужно.
-- `Select2Copy.cer` — публичный сертификат, которым подписан exe.
+- `Select2Copy.exe` — portable self-contained, около 72 МБ. Для Windows 10/11 x64, .NET устанавливать не нужно.
+- `Select2Copy-lite.exe` — компактная версия, около 275 КБ. Требует установленный [.NET 10 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/10.0).
+- `Select2Copy.cer` — публичный сертификат, которым подписаны оба exe.
 - `SHA256SUMS.txt` — контрольные суммы файлов.
+
+Функционально обе сборки одинаковы. Lite-версия меньше, потому что не включает runtime.
 
 ## Возможности
 
@@ -64,7 +67,7 @@ Select2Copy.exe --history
 
 ## Подпись
 
-Релизный exe подписан сертификатом `CN=Select2Copy` (самоподписанный). Публичная часть — `Select2Copy.cer`.
+Релизные exe подписаны сертификатом `CN=Select2Copy` (самоподписанный). Публичная часть — `Select2Copy.cer`.
 
 На другой машине подпись будет считаться доверенной только после установки сертификата в «Доверенные корневые центры сертификации» и «Доверенные издатели» текущего пользователя. Для публичного распространения лучше использовать сертификат код-подписи от CA.
 
@@ -81,7 +84,12 @@ Get-FileHash .\Select2Copy.exe -Algorithm SHA256
 
 ```powershell
 dotnet build Select2Copy.sln -c Release
+
+# portable, около 72 МБ
 dotnet publish src/Select2Copy/Select2Copy.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:EnableCompressionInSingleFile=true -o dist
+
+# lite, около 275 КБ; нужен установленный .NET 10 Desktop Runtime
+dotnet publish src/Select2Copy/Select2Copy.csproj -c Release -r win-x64 --self-contained false -p:PublishSingleFile=true -o dist-lite
 ```
 
 ## Ограничения

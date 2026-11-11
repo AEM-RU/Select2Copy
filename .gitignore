@@ -4,6 +4,7 @@ obj/
 *.user
 *.suo
 Select2Copy.exe
+Select2Copy-lite.exe
 Select2Copy.json
 Select2Copy.history.json
 Select2Copy.log
