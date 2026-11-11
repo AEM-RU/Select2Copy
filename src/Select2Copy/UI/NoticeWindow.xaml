@@ -1,0 +1,63 @@
+<Window x:Class="Select2Copy.UI.NoticeWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Select2Copy"
+        Width="320"
+        SizeToContent="Height"
+        WindowStartupLocation="CenterScreen"
+        Background="Transparent"
+        AllowsTransparency="True"
+        WindowStyle="None"
+        ResizeMode="NoResize"
+        ShowInTaskbar="False">
+    <Window.Resources>
+        <Style x:Key="NoticeButton" TargetType="Button">
+            <Setter Property="Width" Value="86" />
+            <Setter Property="Height" Value="28" />
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="Background" Value="#4FD1C5" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="FontFamily" Value="Segoe UI" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Border"
+                                Background="{TemplateBinding Background}"
+                                CornerRadius="6">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Border" Property="Background" Value="#3BB8AD" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+    <Border Background="#F2141619"
+            BorderBrush="#4FD1C5"
+            BorderThickness="2"
+            CornerRadius="8"
+            Padding="16"
+            MouseLeftButtonDown="Border_MouseLeftButtonDown">
+        <StackPanel>
+            <TextBlock x:Name="MessageText"
+                       Text="Select2Copy"
+                       TextWrapping="Wrap"
+                       Foreground="White"
+                       FontFamily="Segoe UI"
+                       FontSize="12"
+                       TextAlignment="Center"
+                       Margin="0,0,0,14" />
+            <Button Content="Хорошо"
+                    Style="{StaticResource NoticeButton}"
+                    IsDefault="True"
+                    IsCancel="True"
+                    Click="Ok_Click" />
+        </StackPanel>
+    </Border>
+</Window>

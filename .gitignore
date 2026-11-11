@@ -1,0 +1,16 @@
+bin/
+obj/
+.vs/
+*.user
+*.suo
+Select2Copy.exe
+Select2Copy.json
+Select2Copy.history.json
+Select2Copy.log
+Select2Copy.cer
+*.pfx
+*.p12
+*.key
+*.snk
+.env
+secrets.*
